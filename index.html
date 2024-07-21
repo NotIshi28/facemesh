@@ -1,106 +1,296 @@
 <html><head>
-<title>AR Face Mesh</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-  body { 
-    font-family: 'Orbitron', sans-serif;
-    margin: 0;
-    padding: 0;
-    background: linear-gradient(45deg, #1a1a1a, #2c2c2c, #1a1a1a);
-    background-size: 400% 400%;
-    animation: gradientBG 15s ease infinite;
-    color: #00ff00;
-  }
-  @keyframes gradientBG {
-    0% {background-position: 0% 50%;}
-    50% {background-position: 100% 50%;}
-    100% {background-position: 0% 50%;}
-  }
-  .container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-  }
-  h1 {
-    text-align: center;
-    text-shadow: 0 0 10px #00ff00;
-  }
-  #videoContainer, #canvasContainer {
-    width: 100%;
-    max-width: 640px;
-    margin: 20px auto;
-    border: 2px solid #00ff00;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 0 20px #00ff00;
-  }
-  #video, #canvas {
-    width: 100%;
-    height: auto;
-    display: block;
-  }
-  #startButton {
-    display: block;
-    margin: 20px auto;
-    padding: 10px 20px;
-    font-size: 18px;
-    color: #000;
-    background-color: #00ff00;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-family: 'Orbitron', sans-serif;
-    text-transform: uppercase;
-    box-shadow: 0 0 10px #00ff00;
-  }
-  #startButton:hover {
-    background-color: #00dd00;
-  }
-  .loading {
-    text-align: center;
-    font-style: italic;
-    color: #00ff00;
-    text-shadow: 0 0 5px #00ff00;
-  }
-</style>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&amp;display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tensorflow/3.18.0/tf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection@0.0.3/dist/face-landmarks-detection.js"></script>
-</head>
-<body>
-  <div class="container">
-    <h1>AR Face Mesh</h1>
-    <div id="videoContainer">
-      <video id="video" playsinline=""></video>
-    </div>
-    <div id="canvasContainer">
-      <canvas id="canvas"></canvas>
-    </div>
-    <button id="startButton">Engage Face Mesh</button>
-    <p class="loading" id="loadingText">Initializing face detection...</p>
-  </div>
-
-  <script>
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    const startButton = document.getElementById('startButton');
-    const loadingText = document.getElementById('loadingText');
-
-    let model;
-    let stream;
-
-    async function setupCamera() {
-      stream = await navigator.mediaDevices.getUserMedia({
-        'audio': false,
-        'video': {
-          facingMode: 'user',
-          width: { ideal: 640 },
-          height: { ideal: 480 }
-        },
-      });
-      video.srcObject = stream;
+  <title>AR Face Mesh</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { 
+      font-family: 'Orbitron', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(45deg, #1a1a1a, #2c2c2c, #1a1a1a);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      color: #00ff00;
     }
-</script>
-</body></html>
+    @keyframes gradientBG {
+      0% {background-position: 0% 50%;}
+      50% {background-position: 100% 50%;}
+      100% {background-position: 0% 50%;}
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      text-shadow: 0 0 10px #00ff00;
+    }
+    #videoContainer, #canvasContainer {
+      width: 100%;
+      max-width: 640px;
+      margin: 20px auto;
+      border: 2px solid #00ff00;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 20px #00ff00;
+    }
+    #video, #canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    #startButton {
+      display: block;
+      margin: 20px auto;
+      padding: 10px 20px;
+      font-size: 18px;
+      color: #000;
+      background-color: #00ff00;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-family: 'Orbitron', sans-serif;
+      text-transform: uppercase;
+      box-shadow: 0 0 10px #00ff00;
+    }
+    #startButton:hover {
+      background-color: #00dd00;
+    }
+    .loading {
+      text-align: center;
+      font-style: italic;
+      color: #00ff00;
+      text-shadow: 0 0 5px #00ff00;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&amp;display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tensorflow/3.18.0/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection@0.0.3/dist/face-landmarks-detection.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>AR Face Mesh</h1>
+      <div id="videoContainer">
+        <video id="video" playsinline=""></video>
+      </div>
+      <div id="canvasContainer">
+        <canvas id="canvas"></canvas>
+      </div>
+      <button id="startButton">Engage Face Mesh</button>
+      <p class="loading" id="loadingText">Initializing face detection...</p>
+    </div>
+  
+    <script>
+      const video = document.getElementById('video');
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      const startButton = document.getElementById('startButton');
+      const loadingText = document.getElementById('loadingText');
+  
+      let model;
+      let stream;
+  
+      async function setupCamera() {
+        stream = await navigator.mediaDevices.getUserMedia({
+          'audio': false,
+          'video': {
+            facingMode: 'user',
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+          },
+        });
+        video.srcObject = stream;
+  
+        return new Promise((resolve) => {
+          video.onloadedmetadata = () => {
+            resolve(video);
+          };
+        });
+      }
+  
+      async function renderPrediction() {
+        const predictions = await model.estimateFaces({
+          input: video,
+          returnTensors: false,
+          flipHorizontal: false,
+          predictIrises: true
+        });
+  
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw black background
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+        if (predictions.length > 0) {
+          predictions.forEach(prediction => {
+            const keypoints = prediction.scaledMesh;
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 2;
+  
+            // Face mesh with silver panels
+            for (let i = 0; i < keypoints.length; i++) {
+              const [x, y] = keypoints[i];
+              const panelSize = 5;
+              ctx.fillStyle = `rgba(192, 192, 192, ${0.5 + Math.random() * 0.5})`;
+              ctx.fillRect(x - panelSize/2, y - panelSize/2, panelSize, panelSize);
+              ctx.strokeStyle = "#808080";
+              ctx.strokeRect(x - panelSize/2, y - panelSize/2, panelSize, panelSize);
+            }
+  
+            // Eyes
+            const leftEye = [keypoints[159][0], keypoints[159][1]];
+            const rightEye = [keypoints[386][0], keypoints[386][1]];
+            
+            ctx.fillStyle = "#ff0000";
+            ctx.beginPath();
+            ctx.arc(leftEye[0], leftEye[1], 15, 0, 2 * Math.PI);
+            ctx.fill();
+  
+            ctx.beginPath();
+            ctx.arc(rightEye[0], rightEye[1], 15, 0, 2 * Math.PI);
+            ctx.fill();
+  
+            // Glowing effect for eyes
+            ctx.shadowColor = "#ff0000";
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.arc(leftEye[0], leftEye[1], 10, 0, 2 * Math.PI);
+            ctx.arc(rightEye[0], rightEye[1], 10, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+  
+            // Mouth
+            ctx.beginPath();
+            ctx.moveTo(keypoints[61][0], keypoints[61][1]);
+            ctx.lineTo(keypoints[291][0], keypoints[291][1]);
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+  
+            // Enhanced Hair simulation
+            const hairColor = "#808080"; // Silver hair color
+            const hairPoints = [
+              10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377, 
+              152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109,
+              // Additional points for fuller hair
+              67, 103, 54, 21, 162, 127, 234, 93, 132, 58, 172, 136, 150, 149, 176, 148, 152, 377, 400, 378, 379, 365, 397, 288, 361, 323, 454, 356, 389, 251, 284, 332, 297, 338
+            ];
+  
+            ctx.strokeStyle = hairColor;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+  
+            for (let i = 0; i < hairPoints.length; i++) {
+              const [x, y] = keypoints[hairPoints[i]];
+              if (i === 0) {
+                ctx.moveTo(x, y);
+              } else {
+                ctx.lineTo(x, y);
+              }
+            }
+  
+            ctx.closePath();
+            ctx.stroke();
+  
+            // Add more dynamic hair strands
+            const numStrands = 100; // Increased number of strands
+            for (let i = 0; i < numStrands; i++) {
+              const startPoint = hairPoints[Math.floor(Math.random() * hairPoints.length)];
+              const [startX, startY] = keypoints[startPoint];
+              
+              ctx.beginPath();
+              ctx.moveTo(startX, startY);
+              
+              // Create curvy hair strands
+              let endX = startX + (Math.random() - 0.5) * 50;
+              let endY = startY - Math.random() * 60;
+              let midX = (startX + endX) / 2 + (Math.random() - 0.5) * 20;
+              let midY = (startY + endY) / 2 + (Math.random() - 0.5) * 20;
+              
+              ctx.quadraticCurveTo(midX, midY, endX, endY);
+              
+              ctx.strokeStyle = `rgba(128, 128, 128, ${Math.random() * 0.7 + 0.3})`;
+              ctx.lineWidth = Math.random() * 2 + 0.5;
+              ctx.stroke();
+            }
+  
+            // Shoulders and upper body
+            const shoulderLeft = keypoints[93];
+            const shoulderRight = keypoints[323];
+            const bodyBottom = [canvas.width / 2, canvas.height];
+  
+            ctx.beginPath();
+            ctx.moveTo(shoulderLeft[0], shoulderLeft[1]);
+            ctx.lineTo(shoulderRight[0], shoulderRight[1]);
+            ctx.lineTo(bodyBottom[0] + 100, bodyBottom[1]);
+            ctx.lineTo(bodyBottom[0] - 100, bodyBottom[1]);
+            ctx.closePath();
+            ctx.fillStyle = "rgba(64, 64, 64, 0.6)";
+            ctx.fill();
+  
+            // Arms
+            const elbowLeft = [shoulderLeft[0] - 50, shoulderLeft[1] + 100];
+            const elbowRight = [shoulderRight[0] + 50, shoulderRight[1] + 100];
+  
+            ctx.beginPath();
+            ctx.moveTo(shoulderLeft[0], shoulderLeft[1]);
+            ctx.lineTo(elbowLeft[0], elbowLeft[1]);
+            ctx.moveTo(shoulderRight[0], shoulderRight[1]);
+            ctx.lineTo(elbowRight[0], elbowRight[1]);
+            ctx.strokeStyle = "rgba(128, 128, 128, 0.8)";
+            ctx.lineWidth = 10;
+            ctx.stroke();
+  
+            // Hands
+            const handLeft = [elbowLeft[0] - 20, elbowLeft[1] + 80];
+            const handRight = [elbowRight[0] + 20, elbowRight[1] + 80];
+  
+            ctx.beginPath();
+            ctx.moveTo(elbowLeft[0], elbowLeft[1]);
+            ctx.lineTo(handLeft[0], handLeft[1]);
+            ctx.moveTo(elbowRight[0], elbowRight[1]);
+            ctx.lineTo(handRight[0], handRight[1]);
+            ctx.stroke();
+  
+            // Draw circles for hands
+            ctx.beginPath();
+            ctx.arc(handLeft[0], handLeft[1], 15, 0, 2 * Math.PI);
+            ctx.arc(handRight[0], handRight[1], 15, 0, 2 * Math.PI);
+            ctx.fillStyle = "rgba(192, 192, 192, 0.8)";
+            ctx.fill();
+            ctx.stroke();
+          });
+        }
+  
+        requestAnimationFrame(renderPrediction);
+      }
+  
+      async function main() {
+        loadingText.textContent = "Initializing face detection...";
+        model = await faceLandmarksDetection.load(
+          faceLandmarksDetection.SupportedPackages.mediapipeFacemesh,
+          {maxFaces: 1}
+        );
+        loadingText.textContent = "Detection ready! Click 'Engage Face Mesh' to begin.";
+        startButton.disabled = false;
+      }
+  
+      startButton.onclick = async function() {
+        await setupCamera();
+        video.play();
+  
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+  
+        startButton.disabled = true;
+        startButton.textContent = "Engaged";
+        loadingText.textContent = "Face mesh is now active!";
+  
+        renderPrediction();
+      };
+  
+      main();
+  </script>
+  </body></html>
